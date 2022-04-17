@@ -1,0 +1,76 @@
+Ionescu Marius-Andrei
+335CB
+
+Organizare:
+
+so_file.h: aici am declarat cu define constantele si stringurile folosite pe
+parcursul temei. De asemenea, aici se afla si structura _so_file, care
+descrie variabilele necesare unui file stream.
+
+so_stdio.c: am inceput prin declararea unor functii helper. compute_open_mode
+este functia care primeste modul in care se doreste deschiderea fisierului
+(r, w, a+ etc) si intoarce rezultatul sub forma de int. Modul de deschidere
+este folosit in apelurile functiei (apelului de sistem) open, iar astfel
+se obtine file descriptorul pentru stream. initialize_stream se ocupa cu
+initializarea parametrilor structurii _so_file. In rest, functiile au fost
+implementate conform pasilor sugerati in enunt. In so_fopen deschid fisierul
+si initialiez un nou file stream pe care il si returnez. In so_fclose inchid
+streamul primit ca parametru, iar in cazul in care ultima operatie realizata
+pe respectivul stream este una de scriere, apelez si so_fflush, iar la final
+eliberez memoria. In so_fgetc apelez read si citesc un caracter in buffer la
+pozitia aferenta, tratez toate cazurile de eroare ce pot aparea. In so_fread
+apelez so_fgetc intr-un while, astfel nr de citiri corespunde cu cel precizat
+de parametrii functiei, iar apoi datele sunt stocate la adresa precizata *ptr.
+In so_fputc apelez so_fflush, care scrie un caracter in streamul primit ca argument
+si actualizez pozitia cursorului in fisier si offsetul bufferului. In so_fwrite,
+dupa modelul din so_fread fac un loop care apeleaza so_fputc si scrie numarul
+de elemente primit ca parametru, iar daca apare eroare sau se ajunge la finalul
+fisierului se iese din loop cu break. In so_fseek mut cursorul fisierului folosind
+rezultatul apelului de sistem lseek, tratand cazurile cand ultima operatia este
+citire/scriere, daca este citire resetez bufferul streamului iar daca este scriere
+fac so_fflush. In so_fflush scriu datele care au mai ramas in bufferul streamului,
+iar while-ul este pentru cazul "cat timp nu s-au scris 4096 bytes, continua sa scrie
+de unde a ramas", iar la final resetez bufferul. Pentru so_popen m-am folosit de
+implementarile din lab3, astfel am facut un pipe intre procs pentru redirectarea
+intrarii/iesirii standard si am apelat fork() pe variabile pid si am tratat
+fiecare caz in functie de tipul de deschidere al fisierului, deschizand/inchizand 
+file descriptorii. La final aloc un nou file stream si il returnez. In so_pclose
+tratez fiecare caz pentru pidul streamului primit ca parametru, inchid streamul, iar
+cu waitpid obtin codul de iesire al procesului, tratez cazul de eroare si intorc
+statusul. Da, tema este foarte utila pentru intelegerea profunda a lucrului cu
+file descriptors/procese. Consider ca implementarea mea este cat se poate de eficienta
+(cat am putut eu), am facut rezolvarile de la functii cat mai scurte si usor de
+inteles si am incercat sa tratez toate cazurile de eroare posibile.
+
+Implementare:
+
+Am incercat sa implementez intreg enuntul (in afara de implementarea pe windows),
+doar ca imi pica testele 40 si 42 din cauza memcheck, nu inteleg ce zone de
+memorie raman neeliberate. Ca dificultati, enuntul a fost prea simplist si cam
+greu de inteles.
+
+Compilare/rulare:
+
+gcc -Wall -g -fPIC -c so_stdio.c
+gcc -Wall -shared so_stdio.o -o libso_stdio.so
+
+Biblioteci linkate:
+
+#include "so_stdio.h"
+#include <sys/types.h> 
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/wait.h>
+
+Bibliografie:
+
+https://ocw.cs.pub.ro/courses/so/curs/fs-ops
+https://ocw.cs.pub.ro/courses/so/curs/process
+paginile de manual ale apelurilor de sistem
+https://www.geeksforgeeks.org/file-opening-modesr-versus-r/
+https://stackoverflow.com/questions/21558937/i-do-not-understand-how-execlp-works-in-linux
+https://stackoverflow.com/questions/21248840/example-of-waitpid-in-use
+https://www.geeksforgeeks.org/fork-system-call/
